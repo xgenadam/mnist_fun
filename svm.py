@@ -1,3 +1,5 @@
+import numpy as np
+
 from sklearn.externals import joblib
 from sklearn.svm import SVC
 from sklearn.metrics import f1_score
@@ -9,8 +11,9 @@ from utils import MNISTDataSingleton
 def run():
     t0 = time()
     print('loading data')
-    X_train_pca = MNISTDataSingleton().X_train_pca
-    y_train = MNISTDataSingleton().y_train
+    train_size = 1000
+    X_train_pca = MNISTDataSingleton().X_train_pca[:train_size]
+    y_train = MNISTDataSingleton().y_train[:train_size]
 
     X_test_pca = MNISTDataSingleton().X_test_pca
     y_test = MNISTDataSingleton().y_test
@@ -23,7 +26,7 @@ def run():
         'kernel': ['rbf', 'linear'],
     }
 
-    clf = GridSearchCV(SVC(), param_grid=param_grid, n_jobs=6, verbose=1)
+    clf = GridSearchCV(SVC(), param_grid=param_grid, n_jobs=6, verbose=3)
 
     print('training classifier')
     t0 = time()

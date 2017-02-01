@@ -9,28 +9,67 @@ from utils import batch
 from utils import MNISTDataSingleton
 
 
+@np.vectorize
 def sigmoid_function(x):
     return float(1/(1 + np.exp(-x)))
 
+@np.vectorize
+def sigmoid_prime(x):
+    sig = sigmoid_function(x)
+    return float(sig * (1 - sig))
 
-def quardratic_cost(pred, target):
-    return float(sum((target - pred)**2)/2)
+@np.vectorize
+def initial_cost_differential(pred, target):
+    return float(pred - target)
 
 
 class FFNN(object):
     """
     feed forward neural network object
     """
-    def __init__(self, layer_dimensions, cost_function=None, activation_function=None, random_weight_seed=42):
+    def __init__(self, layer_dimensions, learning_rate=0.05, activation_function=None, activation_prime=None, random_weight_seed=42):
         np.random.seed(random_weight_seed)
-        self.weights = [np.random.rand(layer_size[i+1], layer_size) for i, layer_size in enumerate(layer_dimensions[:-1])]
-        self.biases = [np.random.rand(layer_size) for layer_size in layer_dimensions]
-        self.cost_function = cost_function if cost_function is not None else quardratic_cost
+        self.num_layers = len(layer_dimensions)
+        self.weights = [np.random.rand(i, j) for i, j in zip(layer_dimensions[:-1], layer_dimensions[1:])]
+        self.biases = [np.random.rand(layer_size) for layer_size in layer_dimensions[1:]]
         self.activation_function = activation_function if activation_function is not None else sigmoid_function
+        self.activation_prime = activation_prime if activation_function is not None else sigmoid_prime
+        self.learning_rate = learning_rate
 
     def fit(self, X_train, y_train, batch_size):
-        for b in batch(zip(X_train, y_train), batch_size):
-            pass
+        for b in batch(zip(X_train, y_train), batch_size, len(X_train)):
+            nabla_bs = [np.zeros(b.shape) for b in self.biases]
+            nabla_ws = [np.zeros(w.shape) for w in self.weights]
+
+            for b_x, b_y in b:
+                n = self.get_nablas(b_x, b_y)
+
+    def get_nablas(self, x, y):
+        nabla_bs = [np.zeros(b.shape) for b in self.biases]
+        nabla_ws = [np.zeros(w.shape) for w in self.weights]
+
+        activation = x
+        activations = [x]
+        activation_primes = []
+        for index, (weights, biases) in enumerate(zip(self.weights, self.biases)):
+            activation = self.predict_layer(activation, weights, biases)
+            activations.append(activation)
+            activation_primes.append(self.activation_prime(activation))
+
+        dc_dh_reversed = [initial_cost_differential(activation, y)]
+
+        for activation_prime in activation_primes[-1::-1]:
+            dc_dh_prev = dc_dh_reversed[-1]
+            # TODO: this is wrong
+            dc_dh_curr = None # np.multiply(dc_dh_prev, activation_prime)
+            dc_dh_reversed.append(dc_dh_curr)
+
+        for index, (nabla_b, nabla_w, activation, dc_dh) in enumerate(zip(nabla_bs, nabla_ws, activations, dc_dh_reversed[-1::-1])):
+            import pdb; pdb.set_trace()
+            nabla_b += None
+            nabla_w += None
+
+        return nabla_ws, nabla_bs
 
     def predict(self, X):
         layer_input = np.array(X, dtype=float)
@@ -51,7 +90,7 @@ def nn_simple():
     y_test = MNISTDataSingleton().y_test
 
     batch_size = 50
-    layer_dimensions = [len(X_train[0]), 744, 10]
+    layer_dimensions = [len(X_train[0]), 15, 10]
     nn = FFNN(layer_dimensions)
 
     nn.fit(X_train, y_train, batch_size)

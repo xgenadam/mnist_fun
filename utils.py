@@ -49,7 +49,9 @@ def plot_gallery(images, titles, h, w, n_row=3, n_col=4):
         plt.yticks(())
 
 
-def batch(iterable, batch_size):
-    iter_len = len(iterable)
+def batch(iterable, batch_size, iter_len):
     for i in range(0, iter_len, batch_size):
-        yield iterable[i: i+batch_size]
+        items = []
+        for j in range(batch_size):
+            items.append(next(iterable))
+        yield items
