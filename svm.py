@@ -1,5 +1,3 @@
-import numpy as np
-
 from sklearn.externals import joblib
 from sklearn.svm import SVC
 from sklearn.metrics import f1_score
