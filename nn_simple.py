@@ -51,7 +51,6 @@ class FFNN(object):
                 target_array[int(b_y)] = 1.0
                 n_bs_latest, n_ws_latest = self.get_nablas(b_x, target_array)
 
-
                 for layer_index, (layer_nab_b, new_layer_nab_bs) in enumerate(zip(nabla_bs, n_bs_latest)):
                     layer_nab_b += new_layer_nab_bs
                     nabla_bs[layer_index] = layer_nab_b
@@ -61,7 +60,7 @@ class FFNN(object):
                     nabla_ws[layer_index] = layer_nab_w
 
             for layer_index, (weight_layer, nabla_w_layer) in enumerate(zip(self.weights, nabla_ws)):
-                self.weights[layer_index] = weight_layer -   ((nabla_w_layer/float(len(b))) + self.learning_rate)
+                self.weights[layer_index] = weight_layer - ((nabla_w_layer/float(len(b))) * self.learning_rate)
 
             for layer_index, (bias_layer, nabla_b_layer) in enumerate(zip(self.biases, nabla_bs)):
                 self.biases[layer_index] = bias_layer - ((nabla_b_layer/float(len(b))) * self.learning_rate)
@@ -91,7 +90,7 @@ class FFNN(object):
         # we can start on building the nablas
         nabla_bs = []
         nabla_ws = []
-        assert len(layer_outputs) == len(layer_output_primes) == len(dc_dhs_reverse) == 3
+        assert len(layer_outputs) == len(layer_output_primes) == len(dc_dhs_reverse)
         for layer_index, (dc_dh, layer_input, layer_output_prime) in enumerate(zip(dc_dhs_reverse[-1::-1], chain([None, ], layer_outputs[:-1]), layer_output_primes)):
             assert dc_dh.shape == layer_output_prime.shape, "shape mismatch on nabla biases {}".format(layer_index)
             nabla_b = dc_dh * layer_output_prime
@@ -134,7 +133,7 @@ def nn_simple():
     y_test = MNISTDataSingleton().y_test
 
     batch_size = 50
-    layer_dimensions = [len(X_train[0]), 15, 10]
+    layer_dimensions = [len(X_train[0]), 45, 15, 10]
 
     nn = FFNN(layer_dimensions)
     print('training classifier')
